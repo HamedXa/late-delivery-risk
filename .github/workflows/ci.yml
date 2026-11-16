@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Tests (no Olist download needed; they build their own small dataset)
+        run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker build -t late-delivery-risk .
+      - name: Start the container and call it
+        run: |
+          docker run -d --name api -p 7860:7860 late-delivery-risk
+          for attempt in $(seq 1 30); do
+            curl -fsS http://localhost:7860/health && break
+            sleep 2
+          done
+          curl -fsS http://localhost:7860/health
+          curl -fsS -X POST http://localhost:7860/predict \
+            -H "Content-Type: application/json" \
+            -d '{"purchase_ts":"2018-08-01T10:00:00","handoff_ts":"2018-08-08T16:00:00","promised_date":"2018-08-14","customer_state":"BA","seller_state":"SP","order_value":120,"freight_value":18,"weight_kg":1.2}'

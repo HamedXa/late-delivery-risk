@@ -1,0 +1,9 @@
+# Everything in requirements.txt, this package itself, and what the pipeline, charts and tests need.
+-r requirements.txt
+-e .
+matplotlib==3.11.2
+pytest==9.1.1
+httpx==0.28.1
+ruff==0.17.5
+# Optional, only for `python -m delivery_risk.pipeline --mlflow`:
+# mlflow==3.18.0

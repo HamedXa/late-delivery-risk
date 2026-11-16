@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Late-delivery risk</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --surface: #fcfcfb; --plane: #f4f4f1; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --line: #e1e0d9; --blue: #2a78d6; --good: #0ca30c; --critical: #d03b3b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--plane); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 20px; color: var(--ink-2); max-width: 70ch; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+  h2 { font-size: 14px; margin: 0 0 12px; color: var(--ink-2); font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--ink-2); margin: 10px 0 4px; }
+  input, select { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+                  font: inherit; background: #fff; color: var(--ink); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid > *, .row > * { min-width: 0; }
+  @media (max-width: 480px) { .row { grid-template-columns: 1fr; gap: 0; } }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  button { font: inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line);
+           background: #fff; color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--ink); color: #fff; border-color: var(--ink); width: 100%;
+                   margin-top: 16px; padding: 10px; }
+  .score { font-size: 52px; font-weight: 600; line-height: 1.1; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13px;
+           font-weight: 600; color: #fff; }
+  .badge.alert { background: var(--critical); } .badge.ok { background: var(--good); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0 0; font-size: 14px; }
+  dt { color: var(--ink-2); } dd { margin: 0; }
+  .reason { margin-top: 12px; }
+  .reason .name { display: flex; justify-content: space-between; font-size: 14px; }
+  .reason .detail { font-size: 12px; color: var(--muted); }
+  .track { height: 8px; background: #eeede8; border-radius: 4px; margin: 4px 0 2px; position: relative; }
+  .fill { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 4px; }
+  .note { font-size: 13px; color: var(--ink-2); margin-top: 16px; }
+  .error { color: var(--critical); font-size: 14px; white-space: pre-wrap; }
+  a { color: var(--blue); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Late-delivery risk at carrier handoff</h1>
+  <p class="lead">Enter an order at the moment the seller hands the parcel to the carrier. The model returns
+    a risk score, where that score ranks against recent orders, and what is driving it.
+    The JSON API is documented at <a href="/docs">/docs</a>.</p>
+
+  <div class="grid">
+    <form class="card" id="form">
+      <h2>Order</h2>
+      <div class="presets">
+        <button type="button" data-preset="comfortable">Plenty of time</button>
+        <button type="button" data-preset="tight">Tight window</button>
+        <button type="button" data-preset="overdue">Handed over late</button>
+      </div>
+      <div class="row">
+        <div><label for="purchase_ts">Purchased</label><input id="purchase_ts" type="datetime-local" required></div>
+        <div><label for="handoff_ts">Handed to carrier</label><input id="handoff_ts" type="datetime-local" required></div>
+      </div>
+      <label for="promised_date">Promised delivery date</label><input id="promised_date" type="date" required>
+      <div class="row">
+        <div><label for="seller_state">Seller state</label><select id="seller_state"></select></div>
+        <div><label for="customer_state">Customer state</label><select id="customer_state"></select></div>
+      </div>
+      <div class="row">
+        <div><label for="weight_kg">Weight (kg)</label><input id="weight_kg" type="number" min="0.05" step="0.05" value="1.2"></div>
+        <div><label for="n_items">Items</label><input id="n_items" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <div class="row">
+        <div><label for="order_value">Order value (R$)</label><input id="order_value" type="number" min="0" step="1" value="120"></div>
+        <div><label for="freight_value">Freight (R$)</label><input id="freight_value" type="number" min="0" step="0.5" value="18"></div>
+      </div>
+      <button class="primary" type="submit">Score this order</button>
+      <div class="error" id="error" role="alert"></div>
+    </form>
+
+    <div class="card" id="result" aria-live="polite">
+      <h2>Result</h2>
+      <p class="note">Fill in the order and press the button, or pick one of the three examples.</p>
+    </div>
+  </div>
+
+  <p class="note">The score ranks orders. It is not a calibrated probability: its level drifts when the
+    network's late rate shifts, so alerts go to the riskiest 10% of recent orders. Trained on the public
+    Olist dataset (Brazil, 2016 to 2018); a demonstration, not a production service.</p>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let reference = null;
+
+const PRESETS = {
+  comfortable: { purchase: "2018-08-01T10:00", handoff: "2018-08-02T16:00", promised: "2018-08-24", seller: "SP", customer: "SP" },
+  tight:       { purchase: "2018-08-01T10:00", handoff: "2018-08-06T16:00", promised: "2018-08-12", seller: "SP", customer: "RJ" },
+  overdue:     { purchase: "2018-08-01T10:00", handoff: "2018-08-16T16:00", promised: "2018-08-15", seller: "PR", customer: "RJ" },
+};
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  $("purchase_ts").value = p.purchase; $("handoff_ts").value = p.handoff; $("promised_date").value = p.promised;
+  $("seller_state").value = p.seller; $("customer_state").value = p.customer;
+}
+
+function payload() {
+  return {
+    purchase_ts: $("purchase_ts").value, handoff_ts: $("handoff_ts").value, promised_date: $("promised_date").value,
+    seller_state: $("seller_state").value, customer_state: $("customer_state").value,
+    weight_kg: Number($("weight_kg").value), n_items: Number($("n_items").value),
+    order_value: Number($("order_value").value), freight_value: Number($("freight_value").value),
+  };
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function render(r) {
+  const box = $("result");
+  box.replaceChildren(el("h2", "", "Result"));
+  box.append(el("div", "score", (r.risk_score * 100).toFixed(0) + " / 100"));
+  box.append(el("span", "badge " + (r.alert ? "alert" : "ok"), r.alert ? "Alert: riskiest 10%" : "No alert"));
+  const facts = el("dl");
+  const add = (k, v) => { facts.append(el("dt", "", k), el("dd", "", v)); };
+  add("Ranks above", r.percentile + "% of recent orders");
+  add("Slack", r.slack_days.toFixed(1) + " days between the promise and typical transit");
+  add("Slack rule says", r.rule_alert ? "alert" : "no alert");
+  box.append(facts);
+  box.append(el("h2", "", r.reasons.length ? "What moves the score, against a typical order" : "Close to a typical order"));
+  box.lastChild.style.marginTop = "18px";
+  const largest = Math.max(0.05, ...r.reasons.map((x) => Math.abs(x.effect)));
+  for (const reason of r.reasons) {
+    const row = el("div", "reason");
+    const name = el("div", "name");
+    name.append(el("span", "", reason.factor), el("span", "", (reason.effect > 0 ? "+" : "") + (reason.effect * 100).toFixed(1) + " pts"));
+    const track = el("div", "track"), fill = el("div", "fill");
+    fill.style.width = (Math.abs(reason.effect) / largest * 100).toFixed(1) + "%";
+    if (reason.effect < 0) fill.style.background = "var(--muted)";
+    track.append(fill);
+    row.append(name, track, el("div", "detail", reason.detail));
+    box.append(row);
+  }
+}
+
+async function score(event) {
+  if (event) event.preventDefault();
+  $("error").textContent = "";
+  try {
+    const response = await fetch("/predict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload()) });
+    const data = await response.json();
+    if (!response.ok) throw new Error((data.detail || []).map((d) => d.msg).join("\n") || "Request failed");
+    render(data);
+  } catch (err) { $("error").textContent = err.message; }
+}
+
+async function start() {
+  reference = await (await fetch("/reference")).json();
+  for (const id of ["seller_state", "customer_state"]) {
+    for (const state of reference.states) $(id).append(new Option(state, state));
+  }
+  document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => { applyPreset(b.dataset.preset); score(); }));
+  $("form").addEventListener("submit", score);
+  applyPreset("tight");
+  score();
+}
+start();
+</script>
+</body>
+</html>

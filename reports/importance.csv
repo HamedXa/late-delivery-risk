@@ -1,0 +1,11 @@
+feature,importance
+transit_slack_days,0.4241
+remaining_days,0.2044
+handling_days,0.0221
+net_in_transit,0.0093
+seller_state,0.0035
+state_late_rate_30d,0.0033
+n_items,0.0017
+distance_km,0.0017
+net_overdue_share,0.0015
+state_overdue_share,0.0009

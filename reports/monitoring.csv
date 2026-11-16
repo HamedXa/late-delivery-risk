@@ -1,0 +1,8 @@
+month,orders,mean_score,actual_late_rate,most_drifted_feature,max_psi,features_over_alert
+2018-02,6507,0.0603,0.1216,seller_late_rate_prior,0.609,1
+2018-03,7042,0.0728,0.2035,seller_late_rate_prior,0.618,2
+2018-04,6895,0.0447,0.056,seller_late_rate_prior,1.437,2
+2018-05,6925,0.0771,0.0671,handoff_hour,4.485,3
+2018-06,6066,0.0252,0.0147,handoff_hour,3.907,6
+2018-07,5986,0.0545,0.0232,handoff_hour,2.272,1
+2018-08,7010,0.0247,0.0666,handoff_hour,1.269,4

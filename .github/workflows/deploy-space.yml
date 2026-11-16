@@ -1,0 +1,57 @@
+name: Deploy demo to Hugging Face Spaces
+
+# Creates the Space on first run, then uploads the API, the page and the model.
+# Runs only after you add two settings to the GitHub repository:
+#   Settings > Secrets and variables > Actions > Secrets:    HF_TOKEN  (a write token from huggingface.co)
+#   Settings > Secrets and variables > Actions > Variables:  HF_SPACE  (for example yourname/late-delivery-risk)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.HF_SPACE != '' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Collect the files the Space needs
+        run: |
+          mkdir space
+          cp -r Dockerfile requirements.txt src app artifacts space/
+          cat > space/README.md <<SPACE
+          ---
+          title: Late Delivery Risk
+          emoji: 📦
+          colorFrom: blue
+          colorTo: gray
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+
+          Demo for https://github.com/${{ github.repository }}
+          SPACE
+      - name: Upload to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          pip install -q huggingface_hub
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          space = os.environ["HF_SPACE"]
+          api.create_repo(space, repo_type="space", space_sdk="docker", exist_ok=True)
+          api.upload_folder(
+              folder_path="space",
+              repo_id=space,
+              repo_type="space",
+              commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]}",
+          )
+          PY

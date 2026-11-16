@@ -1,0 +1,10 @@
+.git
+.github
+data
+reports
+tests
+docs
+mlruns
+mlflow.db
+**/__pycache__
+*.md

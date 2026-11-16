@@ -1,0 +1,96 @@
+{
+  "checkout": {
+    "selected": "gbm_shallow",
+    "candidates": [
+      {
+        "candidate": "gbm_default",
+        "average_precision_by_month": 0.1115,
+        "average_precision_pooled": 0.1172,
+        "roc_auc_pooled": 0.6038,
+        "recall_at_budget": 0.1753
+      },
+      {
+        "candidate": "gbm_regularized",
+        "average_precision_by_month": 0.1148,
+        "average_precision_pooled": 0.107,
+        "roc_auc_pooled": 0.5799,
+        "recall_at_budget": 0.1748
+      },
+      {
+        "candidate": "gbm_shallow",
+        "average_precision_by_month": 0.112,
+        "average_precision_pooled": 0.1126,
+        "roc_auc_pooled": 0.597,
+        "recall_at_budget": 0.1769
+      },
+      {
+        "candidate": "narrow feature set (5 inputs)",
+        "average_precision_by_month": 0.1162,
+        "average_precision_pooled": 0.1201,
+        "roc_auc_pooled": 0.6288,
+        "recall_at_budget": 0.1811
+      },
+      {
+        "candidate": "logistic",
+        "average_precision_by_month": 0.0869,
+        "average_precision_pooled": 0.0769,
+        "roc_auc_pooled": 0.442,
+        "recall_at_budget": 0.1186
+      },
+      {
+        "candidate": "rule (rule_short_promise)",
+        "average_precision_by_month": 0.0961,
+        "average_precision_pooled": 0.0997,
+        "roc_auc_pooled": 0.5841,
+        "recall_at_budget": 0.1302
+      }
+    ]
+  },
+  "handoff": {
+    "selected": "gbm_regularized",
+    "candidates": [
+      {
+        "candidate": "gbm_default",
+        "average_precision_by_month": 0.3047,
+        "average_precision_pooled": 0.2559,
+        "roc_auc_pooled": 0.6399,
+        "recall_at_budget": 0.3295
+      },
+      {
+        "candidate": "gbm_regularized",
+        "average_precision_by_month": 0.3082,
+        "average_precision_pooled": 0.2798,
+        "roc_auc_pooled": 0.6888,
+        "recall_at_budget": 0.3306
+      },
+      {
+        "candidate": "gbm_shallow",
+        "average_precision_by_month": 0.3076,
+        "average_precision_pooled": 0.2709,
+        "roc_auc_pooled": 0.6767,
+        "recall_at_budget": 0.3241
+      },
+      {
+        "candidate": "narrow feature set (11 inputs)",
+        "average_precision_by_month": 0.3223,
+        "average_precision_pooled": 0.3159,
+        "roc_auc_pooled": 0.7327,
+        "recall_at_budget": 0.3536
+      },
+      {
+        "candidate": "logistic",
+        "average_precision_by_month": 0.2448,
+        "average_precision_pooled": 0.1798,
+        "roc_auc_pooled": 0.5361,
+        "recall_at_budget": 0.2617
+      },
+      {
+        "candidate": "rule (rule_low_slack)",
+        "average_precision_by_month": 0.2837,
+        "average_precision_pooled": 0.2703,
+        "roc_auc_pooled": 0.6928,
+        "recall_at_budget": 0.3268
+      }
+    ]
+  }
+}
