@@ -1,5 +1,7 @@
 # Late-delivery risk
 
+[![CI](https://github.com/HamedXa/late-delivery-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/HamedXa/late-delivery-risk/actions/workflows/ci.yml)
+
 An early-warning model for e-commerce orders. It scores each order at the moment the seller hands the parcel to the carrier, so a support or logistics team can act on the riskiest orders before the customer notices a delay.
 
 In a month-by-month backtest on 46,431 orders from the public Olist dataset, alerting on the riskiest 10% of orders caught 36% of the deliveries that ended up late. Random alerts would catch 10%.
